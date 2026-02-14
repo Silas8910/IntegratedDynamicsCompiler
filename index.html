@@ -1,85 +1,124 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Simple Graph Tool</title>
-  <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+  <meta charset="UTF-8" />
+  <title>Node Editor</title>
+
+  <!-- React + ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- React Flow -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/reactflow@11/dist/style.css"
+  />
+  <script src="https://unpkg.com/reactflow@11/dist/reactflow.min.js"></script>
+
   <style>
-    body { margin: 0; }
-    #cy {
+    body {
+      margin: 0;
+      background: #1e1e1e;
+    }
+
+    #root {
       width: 100vw;
       height: 100vh;
-      display: block;
-      background: #f5f5f5;
+    }
+
+    .custom-node {
+      padding: 10px;
+      border-radius: 6px;
+      background: #2d2d2d;
+      color: white;
+      border: 1px solid #444;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
+  <div id="root"></div>
 
-<div id="cy"></div>
+  <script>
+    const { useCallback, useState } = React;
+    const {
+      ReactFlow,
+      ReactFlowProvider,
+      addEdge,
+      Background,
+      Controls,
+      Handle,
+      Position
+    } = ReactFlow;
 
-<script>
-  const cy = cytoscape({
-    container: document.getElementById('cy'),
-    elements: [],
-    style: [
-      {
-        selector: 'node',
-        style: {
-          'background-color': '#0074D9',
-          'label': 'data(label)',
-          'text-valign': 'center',
-          'color': '#fff'
+    // Custom Node
+    function MathNode() {
+      return React.createElement(
+        "div",
+        { className: "custom-node" },
+        "Math Node",
+
+        // Inputs
+        React.createElement(Handle, {
+          type: "target",
+          position: Position.Left,
+          id: "a",
+          style: { top: 25 }
+        }),
+        React.createElement(Handle, {
+          type: "target",
+          position: Position.Left,
+          id: "b",
+          style: { top: 50 }
+        }),
+
+        // Output
+        React.createElement(Handle, {
+          type: "source",
+          position: Position.Right,
+          id: "result",
+          style: { top: 37 }
+        })
+      );
+    }
+
+    const nodeTypes = { math: MathNode };
+
+    function Flow() {
+      const [nodes, setNodes] = useState([
+        {
+          id: "1",
+          type: "math",
+          position: { x: 250, y: 150 },
+          data: {}
         }
+      ]);
+
+      const [edges, setEdges] = useState([]);
+
+      const onConnect = useCallback(
+        (params) => setEdges((eds) => addEdge(params, eds)),
+        []
+      );
+
+      return React.createElement(ReactFlow, {
+        nodes,
+        edges,
+        onConnect,
+        nodeTypes,
+        fitView: true
       },
-      {
-        selector: 'edge',
-        style: {
-          'width': 3,
-          'line-color': '#555'
-        }
-      }
-    ],
-    layout: { name: 'preset' }
-  });
-
-  let nodeCount = 0;
-  let selectedNode = null;
-
-  // Click background to create node
-  cy.on('tap', function(event){
-    if(event.target === cy){
-      const pos = event.position;
-      cy.add({
-        group: 'nodes',
-        data: { id: 'n' + nodeCount, label: 'Node ' + nodeCount },
-        position: pos
-      });
-      nodeCount++;
+        React.createElement(Background),
+        React.createElement(Controls)
+      );
     }
-  });
 
-  // Click node to connect
-  cy.on('tap', 'node', function(event){
-    const node = event.target;
-
-    if(selectedNode == null){
-      selectedNode = node;
-      node.style('background-color', 'red');
-    } else {
-      cy.add({
-        group: 'edges',
-        data: {
-          id: selectedNode.id() + node.id(),
-          source: selectedNode.id(),
-          target: node.id()
-        }
-      });
-
-      selectedNode.style('background-color', '#0074D9');
-      selectedNode = null;
+    function App() {
+      return React.createElement(
+        ReactFlowProvider,
+        null,
+        React.createElement(Flow)
+      );
     }
-  });
-</script>
 
-</body>
-</html>
+    ReactDOM.createRoot(document.getElementById("
