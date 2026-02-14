@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Graph Tool</title>
+  <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+  <style>
+    body { margin: 0; }
+    #cy {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      background: #f5f5f5;
+    }
+  </style>
+</head>
+<body>
+
+<div id="cy"></div>
+
+<script>
+  const cy = cytoscape({
+    container: document.getElementById('cy'),
+    elements: [],
+    style: [
+      {
+        selector: 'node',
+        style: {
+          'background-color': '#0074D9',
+          'label': 'data(label)',
+          'text-valign': 'center',
+          'color': '#fff'
+        }
+      },
+      {
+        selector: 'edge',
+        style: {
+          'width': 3,
+          'line-color': '#555'
+        }
+      }
+    ],
+    layout: { name: 'preset' }
+  });
+
+  let nodeCount = 0;
+  let selectedNode = null;
+
+  // Click background to create node
+  cy.on('tap', function(event){
+    if(event.target === cy){
+      const pos = event.position;
+      cy.add({
+        group: 'nodes',
+        data: { id: 'n' + nodeCount, label: 'Node ' + nodeCount },
+        position: pos
+      });
+      nodeCount++;
+    }
+  });
+
+  // Click node to connect
+  cy.on('tap', 'node', function(event){
+    const node = event.target;
+
+    if(selectedNode == null){
+      selectedNode = node;
+      node.style('background-color', 'red');
+    } else {
+      cy.add({
+        group: 'edges',
+        data: {
+          id: selectedNode.id() + node.id(),
+          source: selectedNode.id(),
+          target: node.id()
+        }
+      });
+
+      selectedNode.style('background-color', '#0074D9');
+      selectedNode = null;
+    }
+  });
+</script>
+
+</body>
+</html>
